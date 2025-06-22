@@ -1,0 +1,274 @@
+/* Email Verification Page Styles */
+/* Usar las mismas variables que index.css */
+:root {
+  --primary: #6366f1;
+  --secondary: #8b5cf6;
+  --accent: #06b6d4;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --dark: #0f172a;
+  --light: #f8fafc;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --blur-sm: blur(4px);
+  --blur-md: blur(8px);
+  --blur-lg: blur(16px);
+}
+
+.email-verification-container {
+  flex: 1;
+  padding: 48px;
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: var(--blur-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.email-verification-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-lg);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 48px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  position: relative;
+  box-shadow: var(--shadow-xl);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.email-verification-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl), 0 0 40px rgba(99, 102, 241, 0.2);
+}
+
+.email-icon {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 30px;
+  position: relative;
+  color: white;
+  font-size: 40px;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.3s ease;
+}
+
+.email-icon:hover {
+  transform: scale(1.05) rotate(5deg);
+}
+
+.email-animation {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: var(--success);
+  border-radius: 50%;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  border: 3px solid white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.verification-content h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+
+.verification-message {
+  font-size: 1.1rem;
+  color: var(--gray-300);
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.verification-instructions {
+  font-size: 0.95rem;
+  color: #eee;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.user-email {
+  font-weight: 600;
+  color: var(--primary);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-bottom: 1px dashed var(--primary);
+}
+
+.user-email:hover {
+  color: var(--secondary);
+}
+
+.timer-container {
+  margin: 30px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+}
+
+.timer-display {
+  font-size: 1rem;
+  color: var(--gray-300);
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.timer-display #timer {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 1.2rem;
+}
+
+.timer-bar-container {
+  width: 100%;
+  height: 6px;
+  background: var(--gray-700);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.timer-bar {
+  height: 100%;
+  background: linear-gradient(to right, var(--primary), var(--accent));
+  border-radius: 3px;
+  transition: width 1s linear;
+  width: 100%;
+}
+
+.action-buttons {
+  margin-top: 30px;
+}
+
+.resend-btn {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-family: "Inter", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.resend-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.resend-btn:disabled {
+  background: var(--gray-600);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pulse-animation {
+  animation: button-pulse 1s infinite;
+}
+
+@keyframes button-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: var(--blur-md);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-xl);
+  z-index: 1000;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--glass-border);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .email-verification-container {
+    padding: 24px;
+  }
+
+  .email-verification-card {
+    padding: 32px 24px;
+  }
+
+  .verification-content h1 {
+    font-size: 2rem;
+  }
+
+  .email-icon {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+  }
+}
