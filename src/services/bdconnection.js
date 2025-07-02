@@ -1,14 +1,13 @@
 import pkg from "pg";
 const { Pool } = pkg;
-// Create a PostgreSQL client connection
+
+// Configuración para Railway (usando DATABASE_URL)
 const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "funkyvaso",
-  password: "12345678", // Replace this with your correct PostgreSQL password
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  // Opcional: configuración adicional para SSL si es necesario
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
-// Connect to the database
-console.log("Connected to PostgreSQL database");
-// Export the pool directly so client.query will work
+
 export default pool;
