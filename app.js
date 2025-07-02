@@ -5,9 +5,9 @@ import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import jwt from "jsonwebtoken";
-import { sendMail } from "./services/mail.service.js";
-import { sendMailResetPassword } from "./services/password.service.js";
-import client from "./services/bdconnection.js";
+import { sendMail } from "./src/services/mail.service.js";
+import { sendMailResetPassword } from "./src/services/password.service.js";
+import client from "./src/services/bdconnection.js";
 import multer from "multer";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
@@ -42,7 +42,8 @@ const io = new Server(server, {
 });
 
 app.use(cookieParser());
-app.set("views", path.join(__dirname, "views"));
+app.set("views", path.join(__dirname, "src", "views"));
+
 app.set("view engine", "ejs");
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
