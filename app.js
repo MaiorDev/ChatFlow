@@ -423,6 +423,12 @@ function validateToken(req, res, next) {
   });
 }
 const PORT = process.env.PORT || 3000;
+
 server.listen(PORT, () => {
-  console.log(`Server is running on port http://localhost:${PORT}`);
+  const isRailway = !!process.env.RAILWAY_STATIC_URL;
+  const url = isRailway
+    ? `https://${process.env.RAILWAY_STATIC_URL}`
+    : `http://localhost:${PORT}`;
+
+  console.log(`✅ Server is running at ${url}`);
 });
