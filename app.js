@@ -91,6 +91,16 @@ io.on("connection", (socket) => {
     }
   });
 });
+app.get("/test-db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM users LIMIT 1");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Error en /test-db:", err);
+    res.status(500).send(err.message);
+  }
+});
+
 app.get("/", (req, res) => {
   if (req.cookies.token) {
     return res.redirect("/home");
