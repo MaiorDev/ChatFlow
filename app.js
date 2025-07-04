@@ -7,7 +7,7 @@ import { dirname } from "path";
 import jwt from "jsonwebtoken";
 import { sendMail } from "./src/services/mail.service.js";
 import { sendMailResetPassword } from "./src/services/password.service.js";
-import client from "./src/services/bdconnection.js";
+import pool from "./src/services/bdconnection.js";
 import multer from "multer";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
@@ -62,7 +62,7 @@ io.on("connection", (socket) => {
       const query =
         "INSERT INTO messages (sender_id, text, date, sent_to, image) VALUES ($1, $2, $3, $4, $5) RETURNING *";
 
-      client.query(
+      pool.query(
         query,
         [msg.senderId, msg.text, msg.date, msg.sentTo, false],
         (err, results) => {
@@ -77,7 +77,7 @@ io.on("connection", (socket) => {
       const query =
         "INSERT INTO messages (sender_id, text, date, sent_to,image ) VALUES ($1, $2, $3, $4,$5) RETURNING *";
 
-      client.query(
+      pool.query(
         query,
         [msg.senderId, msg.text, msg.date, msg.sentTo, true],
         (err, results) => {
@@ -103,7 +103,7 @@ app.post("/login/submit", (req, res) => {
   console.log(username, password);
   const query = "SELECT * FROM users WHERE fullname = $1 AND verified = '1'";
 
-  client.query(query, [username], async (err, results) => {
+  pool.query(query, [username], async (err, results) => {
     if (err) {
       console.error("Error fetching data:", err);
       return res.status(500).json({ error: "Error fetching data" });
@@ -141,7 +141,7 @@ app.get("/forgot-password", (req, res) => {
 app.post("/forgot-password/submit", (req, res) => {
   const { email } = req.body;
   const query = "SELECT * FROM users WHERE email = $1";
-  client.query(query, [email], (err, results) => {
+  pool.query(query, [email], (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching data" });
     }
@@ -177,7 +177,7 @@ app.post("/reset-password/submit", async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
     const updateQuery = "UPDATE users SET password = $1 WHERE email = $2";
-    client.query(updateQuery, [hashedPassword, email], (err, updateResult) => {
+    pool.query(updateQuery, [hashedPassword, email], (err, updateResult) => {
       if (err) {
         console.error("Error updating password:", err);
         return res.status(500).json({ error: "Error updating password" });
@@ -204,7 +204,7 @@ app.post("/register/submit", async (req, res) => {
 
   try {
     // First check if the user already exists
-    const checkResult = await client.query(
+    const checkResult = await pool.query(
       "SELECT * FROM users WHERE email = $1 AND fullname = $2",
       [email, fullname]
     );
@@ -223,7 +223,7 @@ app.post("/register/submit", async (req, res) => {
     // If user doesn't exist, proceed with registration
     const query =
       "INSERT INTO users (fullname, email, password) VALUES ($1, $2, $3)";
-    await client.query(query, [fullname, email, hashedPassword]);
+    await pool.query(query, [fullname, email, hashedPassword]);
 
     const token = jwt.sign({ email }, process.env.SECRET, {
       expiresIn: "1h",
@@ -251,14 +251,14 @@ app.get("/verify-email", (req, res) => {
     }
     const { email } = decoded;
     const updateQuery = "UPDATE users SET verified = 1 WHERE email = $1";
-    client.query(updateQuery, [email], (err, updateResult) => {
+    pool.query(updateQuery, [email], (err, updateResult) => {
       if (err) {
         console.error("Error updating user:", err);
         return res.status(500).json({ error: "Error updating user" });
       }
       // Fetch the user to get their id
       const selectQuery = "SELECT id_user FROM users WHERE email = $1";
-      client.query(selectQuery, [email], (err, selectResult) => {
+      pool.query(selectQuery, [email], (err, selectResult) => {
         if (err || !selectResult.rows.length) {
           console.error("Error fetching user:", err);
           return res.status(500).json({ error: "User not found after update" });
@@ -282,14 +282,14 @@ app.get("/verify-email", (req, res) => {
 app.get("/home", validateToken, async (req, res) => {
   const user = req.user;
   const query = "SELECT * FROM messages";
-  client.query(query, (err, results) => {
+  pool.query(query, (err, results) => {
     if (err) {
       console.error("Error fetching messages:", err);
       return res.status(500).json({ error: "Error fetching messages" });
     }
     const messages = results.rows;
     let query = "SELECT fullname, id_user, profile FROM users";
-    client.query(query, (err, results) => {
+    pool.query(query, (err, results) => {
       if (err) {
         console.error("Error fetching users:", err);
         return res.status(500).json({ error: "Error fetching users" });
@@ -307,14 +307,14 @@ app.post("/chat", (req, res) => {
   console.log(contactId, currentId);
   const query =
     "SELECT * FROM messages WHERE (sender_id = $1 AND sent_to = $2) OR (sender_id = $2 AND sent_to = $1)";
-  client.query(query, [currentId, contactId], (err, results) => {
+  pool.query(query, [currentId, contactId], (err, results) => {
     if (err) {
       console.error("Error fetching messages:", err);
       return res.status(500).json({ error: "Error fetching messages" });
     }
     const messages = results.rows;
     const query = "SELECT status FROM users WHERE id_user = $1";
-    client.query(query, [contactId], (err, results) => {
+    pool.query(query, [contactId], (err, results) => {
       if (err) {
         console.error("Error fetching messages:", err);
         return res.status(500).json({ error: "Error fetching messages" });
@@ -344,7 +344,7 @@ app.post("/update-profile-picture", upload.single("profileImg"), (req, res) => {
     });
   }
   const query = "UPDATE users SET profile = $1 WHERE id_user = $2";
-  client.query(query, [profilePicture, id_user], (err, results) => {
+  pool.query(query, [profilePicture, id_user], (err, results) => {
     if (err) {
       console.error("Error updating profile picture:", err);
       return res.status(500).json({ error: "Error updating profile picture" });
@@ -362,7 +362,7 @@ app.post("/update-profile", (req, res) => {
   }
   const query =
     "UPDATE users SET fullname = $1, status = $2 WHERE id_user = $3";
-  client.query(query, [name, status, id_user], (err, results) => {
+  pool.query(query, [name, status, id_user], (err, results) => {
     if (err) {
       console.error("Error updating profile picture:", err);
       return res
@@ -406,7 +406,7 @@ function validateToken(req, res, next) {
     const userId = decoded.userId;
     // Use userId instead of userEmail in the query
     const query = "SELECT * FROM users WHERE id_user=$1";
-    client.query(query, [userId], (dbErr, results) => {
+    pool.query(query, [userId], (dbErr, results) => {
       if (dbErr || results.rows.length === 0) {
         console.error(
           "Error fetching user data:",
@@ -427,4 +427,3 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
 });
-
