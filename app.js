@@ -435,17 +435,11 @@ function validateToken(req, res, next) {
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
-  console.log(
-    "process.env.PGUSER",
-    process.env.PGUSER,
-    "process.env.PGHOST",
-    process.env.PGHOST,
-    "process.env.PGDATABASE",
-    process.env.PGDATABASE,
-    "process.env.PGPASSWORD",
-    process.env.PGPASSWORD,
-    "process.env.PGPORT",
-    process.env.PGPORT
-  );
+  if (process.env.PGPORT) {
+    console.log("✅ Database connected");
+  } else {
+    console.log("❌ Database not connected");
+  }
+  console.log(process.env.PGPORT);
   console.log(`✅ Server is running on port ${PORT}`);
 });
