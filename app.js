@@ -213,24 +213,23 @@ app.post("/register/submit", async (req, res) => {
   const { fullname, email, password } = req.body;
 
   try {
-    // First check if the user already exists
+    // Verificar si el email ya está registrado
     const checkResult = await pool.query(
-      "SELECT * FROM users WHERE email = $1 AND fullname = $2",
-      [email, fullname]
+      "SELECT * FROM users WHERE email = $1",
+      [email]
     );
 
-    // If user exists, return error
     if (checkResult.rows.length > 0) {
       return res
         .status(400)
         .json({ error: "User with this email already exists" });
     }
 
-    // Hash the password with bcrypt
+    // Hashear la contraseña
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // If user doesn't exist, proceed with registration
+    // Insertar nuevo usuario
     const query =
       "INSERT INTO users (fullname, email, password) VALUES ($1, $2, $3)";
     await pool.query(query, [fullname, email, hashedPassword]);
