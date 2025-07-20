@@ -1,24 +1,22 @@
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import { Resend } from "resend";
 dotenv.config();
 
-const transport = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+const resend = new Resend("re_7McRRGSb_PAfHoPfT5V5eN8cALB5NiXu6");
 
 export async function sendMailResetPassword(email, subject, token, user) {
-  transport.sendMail({
-    from: process.env.EMAIL_USER,
+  const { data, error } = await resend.emails.send({
+    from: "Acme <onboarding@resend.dev>",
     to: email,
     subject: subject,
     html: creationMailVerificationCode(token, user),
   });
+
+  if (error) {
+    return console.error({ error });
+  }
+
+  console.log({ data });
 }
 
 function creationMailVerificationCode(token, user) {
