@@ -5,8 +5,8 @@ import * as dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import jwt from "jsonwebtoken";
-import { sendMail } from "./src/services/mail.service.js";
-import { sendMailResetPassword } from "./src/services/password.service.js";
+// import { sendMail } from "./src/services/mail.service.js";
+// import { sendMailResetPassword } from "./src/services/password.service.js";
 import pool from "./src/services/bdconnection.js";
 import multer from "multer";
 import { Server } from "socket.io";
@@ -145,63 +145,63 @@ app.post("/login/submit", (req, res) => {
     }
   });
 });
-app.get("/forgot-password", (req, res) => {
-  res.render("forgotpassword.ejs");
-});
-app.post("/forgot-password/submit", (req, res) => {
-  const { email } = req.body;
-  const query = "SELECT * FROM users WHERE email = $1";
-  pool.query(query, [email], (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: "Error fetching data" });
-    }
-    if (results.rows.length > 0) {
-      const user = results.rows[0];
-      const token = jwt.sign({ email: user.email }, process.env.SECRET, {
-        expiresIn: "1h",
-      });
-      sendMailResetPassword(email, "Reset your password", token, user.fullname);
+// app.get("/forgot-password", (req, res) => {
+//   res.render("forgotpassword.ejs");
+// });
+// app.post("/forgot-password/submit", (req, res) => {
+//   const { email } = req.body;
+//   const query = "SELECT * FROM users WHERE email = $1";
+//   pool.query(query, [email], (err, results) => {
+//     if (err) {
+//       return res.status(500).json({ error: "Error fetching data" });
+//     }
+//     if (results.rows.length > 0) {
+//       const user = results.rows[0];
+//       const token = jwt.sign({ email: user.email }, process.env.SECRET, {
+//         expiresIn: "1h",
+//       });
+//       sendMailResetPassword(email, "Reset your password", token, user.fullname);
 
-      return res.json({ success: true, message: "Email sent successfully" });
-    } else {
-      return res.status(404).json({ error: "User not found" });
-    }
-  });
-});
-app.get("/reset-password/:token", (req, res) => {
-  const { token } = req.params;
-  jwt.verify(token, process.env.SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(400).json({ error: "Invalid token" });
-    }
-    res.render("changePass.ejs", { token });
-  });
-});
-app.post("/reset-password/submit", async (req, res) => {
-  const { token, newPassword } = req.body;
-  console.log(token, newPassword);
-  try {
-    const decoded = jwt.verify(token, process.env.SECRET);
-    const { email } = decoded;
-    console.log(email);
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-    const updateQuery = "UPDATE users SET password = $1 WHERE email = $2";
-    pool.query(updateQuery, [hashedPassword, email], (err, updateResult) => {
-      if (err) {
-        console.error("Error updating password:", err);
-        return res.status(500).json({ error: "Error updating password" });
-      }
-      return res.json({
-        success: true,
-        message: "Password updated successfully",
-      });
-    });
-  } catch (error) {
-    console.error("Error in password reset process:", error);
-    return res.status(500).json({ error: "Error in password reset process" });
-  }
-});
+//       return res.json({ success: true, message: "Email sent successfully" });
+//     } else {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+//   });
+// });
+// app.get("/reset-password/:token", (req, res) => {
+//   const { token } = req.params;
+//   jwt.verify(token, process.env.SECRET, (err, decoded) => {
+//     if (err) {
+//       return res.status(400).json({ error: "Invalid token" });
+//     }
+//     res.render("changePass.ejs", { token });
+//   });
+// });
+// app.post("/reset-password/submit", async (req, res) => {
+//   const { token, newPassword } = req.body;
+//   console.log(token, newPassword);
+//   try {
+//     const decoded = jwt.verify(token, process.env.SECRET);
+//     const { email } = decoded;
+//     console.log(email);
+//     const saltRounds = 10;
+//     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+//     const updateQuery = "UPDATE users SET password = $1 WHERE email = $2";
+//     pool.query(updateQuery, [hashedPassword, email], (err, updateResult) => {
+//       if (err) {
+//         console.error("Error updating password:", err);
+//         return res.status(500).json({ error: "Error updating password" });
+//       }
+//       return res.json({
+//         success: true,
+//         message: "Password updated successfully",
+//       });
+//     });
+//   } catch (error) {
+//     console.error("Error in password reset process:", error);
+//     return res.status(500).json({ error: "Error in password reset process" });
+//   }
+// });
 
 app.get("/checkEmail", (req, res) => {
   res.render("checkEmail.ejs");
@@ -237,8 +237,45 @@ app.post("/register/submit", async (req, res) => {
     const token = jwt.sign({ email }, process.env.SECRET, {
       expiresIn: "1h",
     });
-    sendMail(email, "Verify your email", token, fullname);
-    res.redirect("/checkEmail");
+    if (!token) {
+      return res.status(400).json({ error: "Token is missing" });
+    }
+    jwt.verify(token, process.env.SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(400).json({ error: "Invalid token" });
+      }
+      const { email } = decoded;
+      const updateQuery = "UPDATE users SET verified = 1 WHERE email = $1";
+      pool.query(updateQuery, [email], (err, updateResult) => {
+        if (err) {
+          console.error("Error updating user:", err);
+          return res.status(500).json({ error: "Error updating user" });
+        }
+        // Fetch the user to get their id
+        const selectQuery = "SELECT id_user FROM users WHERE email = $1";
+        pool.query(selectQuery, [email], (err, selectResult) => {
+          if (err || !selectResult.rows.length) {
+            console.error("Error fetching user:", err);
+            return res
+              .status(500)
+              .json({ error: "User not found after update" });
+          }
+          const userId = selectResult.rows[0].id_user;
+          const newToken = jwt.sign({ userId }, process.env.SECRET, {
+            expiresIn: "1h",
+          });
+          res.cookie("token", newToken, {
+            httpOnly: true,
+            maxAge: 3600000,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+          });
+          res.redirect("/home");
+        });
+      });
+    });
+    // sendMail(email, "Verify your email", token, fullname);
+    res.redirect("/");
   } catch (error) {
     console.error("Error in registration process:", error);
     return res.status(500).json({ error: "Error in registration process" });
@@ -251,41 +288,41 @@ app.get("/checkEmail", (_, res) => {
 
 app.get("/verify-email", (req, res) => {
   const { token } = req.query;
-  if (!token) {
-    return res.status(400).json({ error: "Token is missing" });
-  }
-  jwt.verify(token, process.env.SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(400).json({ error: "Invalid token" });
-    }
-    const { email } = decoded;
-    const updateQuery = "UPDATE users SET verified = 1 WHERE email = $1";
-    pool.query(updateQuery, [email], (err, updateResult) => {
-      if (err) {
-        console.error("Error updating user:", err);
-        return res.status(500).json({ error: "Error updating user" });
-      }
-      // Fetch the user to get their id
-      const selectQuery = "SELECT id_user FROM users WHERE email = $1";
-      pool.query(selectQuery, [email], (err, selectResult) => {
-        if (err || !selectResult.rows.length) {
-          console.error("Error fetching user:", err);
-          return res.status(500).json({ error: "User not found after update" });
-        }
-        const userId = selectResult.rows[0].id_user;
-        const newToken = jwt.sign({ userId }, process.env.SECRET, {
-          expiresIn: "1h",
-        });
-        res.cookie("token", newToken, {
-          httpOnly: true,
-          maxAge: 3600000,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-        });
-        res.redirect("/home");
-      });
-    });
-  });
+  // if (!token) {
+  //   return res.status(400).json({ error: "Token is missing" });
+  // }
+  // jwt.verify(token, process.env.SECRET, (err, decoded) => {
+  //   if (err) {
+  //     return res.status(400).json({ error: "Invalid token" });
+  //   }
+  //   const { email } = decoded;
+  //   const updateQuery = "UPDATE users SET verified = 1 WHERE email = $1";
+  //   pool.query(updateQuery, [email], (err, updateResult) => {
+  //     if (err) {
+  //       console.error("Error updating user:", err);
+  //       return res.status(500).json({ error: "Error updating user" });
+  //     }
+  //     // Fetch the user to get their id
+  //     const selectQuery = "SELECT id_user FROM users WHERE email = $1";
+  //     pool.query(selectQuery, [email], (err, selectResult) => {
+  //       if (err || !selectResult.rows.length) {
+  //         console.error("Error fetching user:", err);
+  //         return res.status(500).json({ error: "User not found after update" });
+  //       }
+  //       const userId = selectResult.rows[0].id_user;
+  //       const newToken = jwt.sign({ userId }, process.env.SECRET, {
+  //         expiresIn: "1h",
+  //       });
+  //       res.cookie("token", newToken, {
+  //         httpOnly: true,
+  //         maxAge: 3600000,
+  //         secure: process.env.NODE_ENV === "production",
+  //         sameSite: "strict",
+  //       });
+  //       res.redirect("/home");
+  //     });
+  //   });
+  // });
 });
 
 app.get("/home", validateToken, async (req, res) => {
