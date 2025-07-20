@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import { Resend } from "resend";
 dotenv.config();
 
-const resend = new Resend("re_7McRRGSb_PAfHoPfT5V5eN8cALB5NiXu6");
+const resend = new Resend(process.env.TOKEN_RESEND);
 
 export async function sendMailResetPassword(email, subject, token, user) {
   const { data, error } = await resend.emails.send({
