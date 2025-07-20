@@ -219,6 +219,7 @@ app.post("/register/submit", async (req, res) => {
     );
 
     if (checkResult.rows.length > 0) {
+      console.error("User with this email already exists");
       return res
         .status(400)
         .json({ error: "User with this email already exists" });
@@ -235,6 +236,7 @@ app.post("/register/submit", async (req, res) => {
     const token = jwt.sign({ email }, process.env.SECRET, { expiresIn: "1h" });
 
     if (!token) {
+      console.error("Token is missing");
       return res.status(400).json({ error: "Token is missing" });
     }
 
@@ -272,7 +274,7 @@ app.post("/register/submit", async (req, res) => {
 
         return res.redirect("/");
       } catch (innerErr) {
-        console.error("Error in user update process:", innerErr);
+        console.error("Error updating or fetching user:", innerErr);
         return res
           .status(500)
           .json({ error: "Error updating or fetching user" });

@@ -281,37 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!response.ok) {
             throw new Error("Registration failed");
           }
-          return response.json();
-        })
-        .then((data) => {
-          // Success animation
-          registerBtn.innerHTML = "<span>Account created! 🎉</span>";
-          registerBtn.style.background =
-            "linear-gradient(135deg, var(--success), var(--success))";
-
-          // Show success message
-          const successMsg = document.createElement("div");
-          successMsg.textContent =
-            "Account created successfully! Please check your email to verify your account.";
-          successMsg.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--success);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            z-index: 1000;
-            animation: slideIn 0.3s ease;
-            max-width: 300px;
-          `;
-
-          document.body.appendChild(successMsg);
-
-          setTimeout(() => {
-            window.location.href = "/check-email";
-          }, 2000);
+          return (window.location.href = "/home");
         })
         .catch((error) => {
           console.error("Error:", error);
@@ -325,6 +295,36 @@ document.addEventListener("DOMContentLoaded", () => {
           const errorMsg = document.createElement("div");
           errorMsg.textContent = "Registration";
         });
+      // .then((data) => {
+      //   // Success animation
+      //   registerBtn.innerHTML = "<span>Account created! 🎉</span>";
+      //   registerBtn.style.background =
+      //     "linear-gradient(135deg, var(--success), var(--success))";
+
+      //   // Show success message
+      //   const successMsg = document.createElement("div");
+      //   successMsg.textContent =
+      //     "Account created successfully! Please check your email to verify your account.";
+      //   successMsg.style.cssText = `
+      //     position: fixed;
+      //     top: 20px;
+      //     right: 20px;
+      //     background: var(--success);
+      //     color: white;
+      //     padding: 16px 24px;
+      //     border-radius: 12px;
+      //     font-size: 0.875rem;
+      //     z-index: 1000;
+      //     animation: slideIn 0.3s ease;
+      //     max-width: 300px;
+      //   `;
+
+      //   document.body.appendChild(successMsg);
+
+      //   setTimeout(() => {
+      //     window.location.href = "/check-email";
+      //   }, 2000);
+      // })
     }
   });
 });
