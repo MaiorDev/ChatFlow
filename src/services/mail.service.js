@@ -6,7 +6,7 @@ const resend = new Resend(process.env.TOKEN_RESEND);
 
 export async function sendMail(email, subject, token, user) {
   const { data, error } = await resend.emails.send({
-    from: "Acme <onboarding@resend.dev>",
+    from: "chatflow17@gmail.com",
     to: email,
     subject: subject,
     html: creationMailVerificationCode(token, user),
