@@ -213,7 +213,6 @@ app.post("/register/submit", async (req, res) => {
   const { fullname, email, password } = req.body;
 
   try {
-    // Verificar si el email ya está registrado
     const checkResult = await pool.query(
       "SELECT * FROM users WHERE email = $1",
       [email]
@@ -225,57 +224,62 @@ app.post("/register/submit", async (req, res) => {
         .json({ error: "User with this email already exists" });
     }
 
-    // Hashear la contraseña
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Insertar nuevo usuario
-    const query =
-      "INSERT INTO users (fullname, email, password) VALUES ($1, $2, $3)";
-    await pool.query(query, [fullname, email, hashedPassword]);
+    await pool.query(
+      "INSERT INTO users (fullname, email, password) VALUES ($1, $2, $3)",
+      [fullname, email, hashedPassword]
+    );
 
-    const token = jwt.sign({ email }, process.env.SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign({ email }, process.env.SECRET, { expiresIn: "1h" });
+
     if (!token) {
       return res.status(400).json({ error: "Token is missing" });
     }
-    jwt.verify(token, process.env.SECRET, (err, decoded) => {
+
+    jwt.verify(token, process.env.SECRET, async (err, decoded) => {
       if (err) {
         return res.status(400).json({ error: "Invalid token" });
       }
-      const { email } = decoded;
-      const updateQuery = "UPDATE users SET verified = 1 WHERE email = $1";
-      pool.query(updateQuery, [email], (err, updateResult) => {
-        if (err) {
-          console.error("Error updating user:", err);
-          return res.status(500).json({ error: "Error updating user" });
+
+      try {
+        await pool.query("UPDATE users SET verified = 1 WHERE email = $1", [
+          decoded.email,
+        ]);
+
+        const selectResult = await pool.query(
+          "SELECT id_user FROM users WHERE email = $1",
+          [decoded.email]
+        );
+
+        if (!selectResult.rows.length) {
+          return res.status(500).json({ error: "User not found after update" });
         }
-        // Fetch the user to get their id
-        const selectQuery = "SELECT id_user FROM users WHERE email = $1";
-        pool.query(selectQuery, [email], (err, selectResult) => {
-          if (err || !selectResult.rows.length) {
-            console.error("Error fetching user:", err);
-            return res
-              .status(500)
-              .json({ error: "User not found after update" });
-          }
-          const userId = selectResult.rows[0].id_user;
-          const newToken = jwt.sign({ userId }, process.env.SECRET, {
-            expiresIn: "1h",
-          });
-          res.cookie("token", newToken, {
-            httpOnly: true,
-            maxAge: 3600000,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-          });
-          res.redirect("/home");
+
+        const userId = selectResult.rows[0].id_user;
+
+        const newToken = jwt.sign({ userId }, process.env.SECRET, {
+          expiresIn: "1h",
         });
-      });
+
+        res.cookie("token", newToken, {
+          httpOnly: true,
+          maxAge: 3600000,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+        });
+
+        return res.redirect("/");
+      } catch (innerErr) {
+        console.error("Error in user update process:", innerErr);
+        return res
+          .status(500)
+          .json({ error: "Error updating or fetching user" });
+      }
     });
-    // sendMail(email, "Verify your email", token, fullname);
-    res.redirect("/");
+
+    // Aquí no pongas ningún res.status o res.redirect
   } catch (error) {
     console.error("Error in registration process:", error);
     return res.status(500).json({ error: "Error in registration process" });
